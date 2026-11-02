@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Project build outputs and logs
+build/*
+!build/.gitkeep
+bin/*
+!bin/.gitkeep
+logs/*
+!logs/.gitkeep
