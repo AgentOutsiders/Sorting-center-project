@@ -5,7 +5,7 @@
 On souhaite simuler le fonctionnement simplifié d’un centre de tri de colis. Le centre reçoit successivement des colis. Chaque colis possède un *identifiant* unique, une *zone de destination* (parmi A, B et C), et un *poids* exprimé en kilogrammes. Lorsqu’un colis arrive dans le centre, il doit être pris en charge puis dirigé vers la zone correspondant à sa destination.
 
 <div align="center">
-  <img src="../pdfVersion/image.png" style="max-width: 600px;">
+  <img src="../pdfVersion/image.png" style="max-width: 450px;">
 </div>
 
 ### Structure :
@@ -37,7 +37,7 @@ Les zones A, B et C fonctionnent indépendamment et peuvent traiter simultanéme
 En trinôme, vous devez mettre en place le centre de tri de colis tel que décrit par l’illustration ci-dessous et les consignes suivantes.
 
 <div align="center">
-  <img src="../pdfVersion/image-1.png" style="max-width: 600px;">
+  <img src="../pdfVersion/image-1.png" style="max-width: 450px;">
 </div>
 
 ### Mise en place par étapes
