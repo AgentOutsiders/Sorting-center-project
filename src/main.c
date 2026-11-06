@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
     /* We read commands until the end or a signal */
     char line[1024];
-    while (fgets(line, sizeof(line), stdin) != NULL)
+    while (!stopRequested && fgets(line, sizeof(line), stdin) != NULL)
     {
         /* We send a package */
         if (strncmp(line, "COLIS ", 6) == 0)
