@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
             write(fifoFd, line, strlen(line));
             break;
         }
-        
+
         /* We report an unknown command */
         else
         {
