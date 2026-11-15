@@ -15,6 +15,9 @@
 /* Signals */
 #include <signal.h>
 
+/* Fork */
+#include <sys/wait.h>
+
 /* Project files */
 #include "common.h"
 
@@ -40,6 +43,26 @@ int main(int argc, char *argv[])
             perror("mkfifo");
             exit(EXIT_FAILURE);
         }
+    }
+
+    /* We make a child to launch the sorting process */
+    pid_t sortingPid = fork();
+
+    if(sortingPid == -1)
+    {
+        perror("fork");
+        return EXIT_FAILURE;
+    }
+
+    /* In the child, we replace the program with sorting */
+    if(sortingPid == 0)
+    {
+        char *args[] = {"./bin/sorting", NULL};
+        execvp(args[0], args);
+
+        /* If we reach this line, execvp failed */
+        perror("execvp");
+        exit(EXIT_FAILURE);
     }
 
     /* We prepare the stop handler */
@@ -95,5 +118,32 @@ int main(int argc, char *argv[])
 
     /* We close the named pipe */
     close(fifoFd);
+
+    /* We wait for the sorting process */
+    int status = 0;
+    if (waitpid(sortingPid, &status, 0) == -1)
+    {
+        perror("waitpid");
+        return EXIT_FAILURE;
+    }
+    if(WIFEXITED(status))
+    {
+        printf("Sorting (pid : %d) finished normally, code = %d\n",
+            sortingPid, WEXITSTATUS(status));
+    }
+    else if (WIFSIGNALED(status))
+    {
+        printf("Sorting (pid %d) killed by signal %d\n",
+            sortingPid, WTERMSIG(status));
+    }
+
+    /* We remove the named pipe to sorting */
+    if (unlink(FIFO_MAIN_TO_SORTING) == -1)
+    {
+        perror("unlink");
+    }
+
+    printf("Main (pid %d) finished normally\n", getpid());
+
     return EXIT_SUCCESS;
 }

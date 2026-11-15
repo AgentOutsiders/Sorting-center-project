@@ -18,6 +18,9 @@
 /* Threads */
 #include <pthread.h>
 
+/* Fork */
+#include <sys/wait.h>
+
 /* Project files */
 #include "common.h"
 
@@ -188,6 +191,26 @@ void *supervisionRoutine(void *arg)
 
 int main(int argc, char *argv[])
 {
+    /* We make a child to launch the display process */
+    pid_t displayPid = fork();
+
+    if(displayPid == -1)
+    {
+        perror("fork");
+        return EXIT_FAILURE;
+    }
+
+    /* In the child, we replace the program with display */
+    if(displayPid == 0)
+    {
+        char *args[] = {"./bin/display", NULL};
+        execvp(args[0], args);
+
+        /* If we reach this line, execvp failed */
+        perror("execvp");
+        exit(EXIT_FAILURE);
+    }
+
     /* We store the id of the 'main' thread */
     mainThread = pthread_self();
 
@@ -301,7 +324,7 @@ int main(int argc, char *argv[])
         /* We stop on QUIT */
         else if (strcmp(line, "QUIT\n") == 0)
         {
-            /* TODO: send a signal to stop the display process */
+            /* We stop display later, once supervision is done (to avoid SIGPIPE) */
             break;
         }
 
@@ -310,6 +333,12 @@ int main(int argc, char *argv[])
         {
             /* TODO: ask the supervision thread for the current state */
         }
+    }
+
+    /* We stop the main process if the target was reached */
+    if (targetReached)
+    {
+        kill(getppid(), SIGTERM);
     }
 
     /* We close the routing pipe to stop the routing thread */
@@ -330,6 +359,32 @@ int main(int argc, char *argv[])
 
     /* We wait for the supervision thread */
     pthread_join(supervisionThread, NULL);
+
+    /* We send a signal to stop the display process */
+    kill(displayPid, SIGTERM);
+
+    /* We wait for the display process */
+    int status = 0;
+    if (waitpid(displayPid, &status, 0) == -1)
+    {
+        perror("waitpid");
+        return EXIT_FAILURE;
+    }
+    if(WIFEXITED(status))
+    {
+        printf("Display (pid : %d) finished normally, code = %d\n",
+            displayPid, WEXITSTATUS(status));
+    }
+    else if (WIFSIGNALED(status))
+    {
+        printf("Display (pid %d) killed by signal %d\n", displayPid, WTERMSIG(status));
+    }
+
+    /* We remove the named pipe to display */
+    if (unlink(FIFO_SORTING_TO_DISPLAY) == -1)
+    {
+        perror("unlink");
+    }
 
     return EXIT_SUCCESS;
 }
